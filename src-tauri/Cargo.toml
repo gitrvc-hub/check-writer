@@ -2,7 +2,7 @@
 name = "check-writer"
 version = "0.1.0"
 description = "Philippine Check Writer"
-authors = ["gitrvc-hub"]
+authors = ["E4Dev Solutions LLC"]
 edition = "2021"
 license = "Apache-2.0"
 
