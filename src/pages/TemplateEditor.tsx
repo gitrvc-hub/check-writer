@@ -5,6 +5,7 @@ import { getTemplate, listBanks, upsertTemplate } from "../db/repos";
 import type { Template, TemplateField } from "../db/types";
 import { useAsync } from "../hooks";
 import { DATE_FORMATS, normalizeFields } from "../lib/checkFields";
+import { LAYOUT_PRESETS, applyPreset } from "../lib/presets";
 import ChequePreview from "../components/ChequePreview";
 import { SAMPLE_DATA, resolveFields } from "../lib/render";
 import { renderChequePdf } from "../lib/pdf";
@@ -45,6 +46,19 @@ export default function TemplateEditor() {
         : t,
     );
     setSaved(false);
+  }
+
+  function applyLayoutPreset(presetId: string) {
+    const preset = LAYOUT_PRESETS.find((p) => p.id === presetId);
+    if (!preset || !tpl) return;
+    if (
+      !confirm(
+        `Apply the "${preset.name}" layout? This repositions all fields to the standard ` +
+          `positions for the current template size. Your background scan is kept.`,
+      )
+    )
+      return;
+    patch({ fields: applyPreset(preset, tpl.width_mm, tpl.height_mm) });
   }
 
   async function pickBackground() {
@@ -170,7 +184,28 @@ export default function TemplateEditor() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 18, alignItems: "start" }}>
         <div className="card" style={{ overflowX: "auto" }}>
-          <h2>Layout — drag to position</h2>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 12,
+            }}
+          >
+            <h2 style={{ margin: 0 }}>Layout — drag to position</h2>
+            <div style={{ display: "flex", gap: 8 }}>
+              {LAYOUT_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  className="btn btn-sm"
+                  onClick={() => applyLayoutPreset(p.id)}
+                  title="Reset all field positions to this standard layout"
+                >
+                  Apply “{p.name}”
+                </button>
+              ))}
+            </div>
+          </div>
           <ChequePreview
             template={tpl}
             values={values}
