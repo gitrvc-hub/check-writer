@@ -39,19 +39,20 @@ export default function WriteCheque() {
   const account = accounts?.find((a) => a.id === accountId) ?? null;
   const template = templates?.find((t) => t.id === templateId) ?? null;
 
-  // Default the account to the first one once loaded.
+  // Default to the first template so a cheque can be printed right away —
+  // no account setup required.
   useEffect(() => {
-    if (accountId == null && accounts && accounts.length) setAccountId(accounts[0].id);
-  }, [accounts, accountId]);
+    if (templateId == null && templates && templates.length) setTemplateId(templates[0].id);
+  }, [templates, templateId]);
 
-  // When the account changes, adopt its default template and next cheque number.
+  // An account is entirely optional. If the user picks one, adopt its default
+  // template and running cheque number as conveniences.
   useEffect(() => {
     if (!account) return;
     if (account.default_template_id) setTemplateId(account.default_template_id);
-    else if (templates && templates.length) setTemplateId((id) => id ?? templates[0].id);
-    setChequeNo(account.next_cheque_no || "");
+    if (account.next_cheque_no) setChequeNo(account.next_cheque_no);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId, account?.default_template_id]);
+  }, [accountId]);
 
   const amountNum = parseFloat(amount) || 0;
   const currency = account?.currency ?? "PHP";
@@ -88,12 +89,15 @@ export default function WriteCheque() {
     ? { ...resolveFields(previewTemplate.fields, chequeData), __crossed: crossed ? "1" : "0" }
     : {};
 
-  const canSubmit = !!account && !!payeeName.trim() && amountNum > 0 && !busy;
+  // The only things required to write a cheque are a payee and an amount.
+  // A template is additionally required to *print* (it defines field positions).
+  const hasContent = !!payeeName.trim() && amountNum > 0 && !busy;
+  const canPrint = hasContent && !!previewTemplate;
 
   async function persist(): Promise<number> {
     const payeeId = await findOrCreatePayee(payeeName);
     const id = await createCheque({
-      account_id: account!.id,
+      account_id: account?.id ?? null,
       template_id: template?.id ?? null,
       payee_id: payeeId,
       payee_name: payeeName.trim(),
@@ -107,8 +111,10 @@ export default function WriteCheque() {
       bearer: bearer ? 1 : 0,
       status: "issued",
     });
-    // Advance the account's running cheque number.
-    if (chequeNo) await setAccountNextCheque(account!.id, incrementChequeNumber(chequeNo));
+    // If an account is attached, advance its running cheque number.
+    if (account && chequeNo) {
+      await setAccountNextCheque(account.id, incrementChequeNumber(chequeNo));
+    }
     await reloadPayees();
     return id;
   }
@@ -124,7 +130,7 @@ export default function WriteCheque() {
   }
 
   async function onSave() {
-    if (!canSubmit) return;
+    if (!hasContent) return;
     setBusy(true);
     try {
       await persist();
@@ -136,7 +142,7 @@ export default function WriteCheque() {
   }
 
   async function onPrint() {
-    if (!canSubmit || !previewTemplate) {
+    if (!hasContent || !previewTemplate) {
       if (!previewTemplate) alert("Pick a cheque template first (create one under Templates).");
       return;
     }
@@ -152,22 +158,23 @@ export default function WriteCheque() {
     }
   }
 
-  const noAccounts = accounts && accounts.length === 0;
+  const noTemplates = templates && templates.length === 0;
 
   return (
     <>
       <div className="page-header">
         <div>
           <h1>Write a Cheque</h1>
-          <p>Fill in the details — the amount in words fills automatically.</p>
+          <p>Pick a template, type the payee and amount, and print. That's it.</p>
         </div>
       </div>
 
-      {noAccounts && (
+      {noTemplates && (
         <div className="card" style={{ marginBottom: 18 }}>
           <div className="empty">
-            <div className="big">▣</div>
-            You need a bank account first. <Link to="/accounts">Add a bank account →</Link>
+            <div className="big">▭</div>
+            To print, you first need a cheque template (it tells the app where each
+            value goes on the paper). <Link to="/templates">Create a template →</Link>
           </div>
         </div>
       )}
@@ -185,21 +192,7 @@ export default function WriteCheque() {
         <div className="card">
           <div className="row">
             <div className="field">
-              <label>From Account</label>
-              <select
-                value={accountId ?? ""}
-                onChange={(e) => setAccountId(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">— Select —</option>
-                {(accounts ?? []).map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.account_name} ({a.bank_short_name ?? "?"})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label>Template</label>
+              <label>Cheque Template</label>
               <select
                 value={templateId ?? ""}
                 onChange={(e) => setTemplateId(e.target.value ? Number(e.target.value) : null)}
@@ -208,6 +201,20 @@ export default function WriteCheque() {
                 {(templates ?? []).map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Account (optional)</label>
+              <select
+                value={accountId ?? ""}
+                onChange={(e) => setAccountId(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">— None —</option>
+                {(accounts ?? []).map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.account_name} ({a.bank_short_name ?? "?"})
                   </option>
                 ))}
               </select>
@@ -289,13 +296,18 @@ export default function WriteCheque() {
             </label>
           </div>
 
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="btn" onClick={onSave} disabled={!canSubmit}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button className="btn" onClick={onSave} disabled={!hasContent}>
               Save to Register
             </button>
-            <button className="btn primary" onClick={onPrint} disabled={!canSubmit}>
+            <button className="btn primary" onClick={onPrint} disabled={!canPrint}>
               Save & Print
             </button>
+            {hasContent && !previewTemplate && (
+              <span className="hint" style={{ margin: 0 }}>
+                Select a template to print.
+              </span>
+            )}
           </div>
         </div>
 
