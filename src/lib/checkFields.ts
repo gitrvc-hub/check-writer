@@ -15,6 +15,22 @@ export {
 export const DEFAULT_CHEQUE_WIDTH_MM = 178;
 export const DEFAULT_CHEQUE_HEIGHT_MM = 84;
 
+/** The default date pattern for a newly-added date field. */
+export const DEFAULT_DATE_FORMAT = "MM/dd/yyyy";
+
+/**
+ * Selectable date patterns for the `date` field. "Boxed digits" prints just the
+ * digits (no separators) so they drop into the pre-printed date boxes on a
+ * Philippine cheque — pair it with letter spacing to hit each box.
+ */
+export const DATE_FORMATS: { label: string; pattern: string; example: string }[] = [
+  { label: "Boxed digits — MMDDYYYY", pattern: "MMddyyyy", example: "09252012" },
+  { label: "Spaced groups — MM DD YYYY", pattern: "MM dd yyyy", example: "09 25 2012" },
+  { label: "Boxed digits — DDMMYYYY", pattern: "ddMMyyyy", example: "25092012" },
+  { label: "Slashes — MM/DD/YYYY", pattern: "MM/dd/yyyy", example: "09/25/2012" },
+  { label: "Slashes — DD/MM/YYYY", pattern: "dd/MM/yyyy", example: "25/09/2012" },
+];
+
 interface FieldMeta {
   key: FieldKey;
   label: string;
@@ -53,7 +69,15 @@ export function makeDefaultField(key: FieldKey): TemplateField {
   // Position presets roughly matching a standard cheque layout.
   switch (key) {
     case "date":
-      return { ...base, x_mm: 128, y_mm: 12, width_mm: 42, align: "left", letter_spacing: 1 };
+      return {
+        ...base,
+        x_mm: 128,
+        y_mm: 12,
+        width_mm: 42,
+        align: "left",
+        letter_spacing: 2.5,
+        format: "MMddyyyy",
+      };
     case "payee":
       return { ...base, x_mm: 24, y_mm: 26, width_mm: 120, font_size_pt: 12 };
     case "amount_figures":

@@ -51,6 +51,8 @@ export interface TemplateField {
   align: "left" | "center" | "right";
   letter_spacing: number; // extra tracking in pt (useful for boxed date digits)
   uppercase: boolean;
+  /** date-fns pattern for the `date` field only (e.g. "MMddyyyy" for boxed digits). */
+  format?: string;
 }
 
 export interface Template {

@@ -82,7 +82,7 @@ export function resolveFields(
     let value = "";
     switch (f.key) {
       case "date":
-        value = formatDatePattern(data.dateISO, "MM/dd/yyyy");
+        value = formatDatePattern(data.dateISO, f.format || "MM/dd/yyyy");
         break;
       case "payee":
         value = data.payeeName;

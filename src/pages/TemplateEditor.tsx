@@ -4,7 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { getTemplate, listBanks, upsertTemplate } from "../db/repos";
 import type { Template, TemplateField } from "../db/types";
 import { useAsync } from "../hooks";
-import { normalizeFields } from "../lib/checkFields";
+import { DATE_FORMATS, normalizeFields } from "../lib/checkFields";
 import ChequePreview from "../components/ChequePreview";
 import { SAMPLE_DATA, resolveFields } from "../lib/render";
 import { renderChequePdf } from "../lib/pdf";
@@ -281,6 +281,25 @@ export default function TemplateEditor() {
                   }
                 />
               </div>
+              {field.key === "date" && (
+                <div className="field">
+                  <label>Date format</label>
+                  <select
+                    value={field.format || "MM/dd/yyyy"}
+                    onChange={(e) => patchField(field.key, { format: e.target.value })}
+                  >
+                    {DATE_FORMATS.map((d) => (
+                      <option key={d.pattern} value={d.pattern}>
+                        {d.label} ({d.example})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="hint">
+                    "Boxed digits" prints only the numbers so they land in the pre-printed
+                    date boxes — tune letter spacing to line them up.
+                  </div>
+                </div>
+              )}
               <div className="checkbox" style={{ marginBottom: 8 }}>
                 <input
                   type="checkbox"
