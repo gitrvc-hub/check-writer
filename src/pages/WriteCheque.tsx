@@ -4,11 +4,9 @@ import { useAsync } from "../hooks";
 import {
   createCheque,
   findOrCreatePayee,
-  incrementChequeNumber,
   listAccounts,
   listPayees,
   listTemplates,
-  setAccountNextCheque,
 } from "../db/repos";
 import { amountToWords } from "../lib/amountToWords";
 import { formatCurrency, todayISO } from "../lib/format";
@@ -46,11 +44,11 @@ export default function WriteCheque() {
   }, [templates, templateId]);
 
   // An account is entirely optional. If the user picks one, adopt its default
-  // template and running cheque number as conveniences.
+  // template as a convenience. (The cheque number is not ours to generate — it's
+  // pre-printed on the physical cheque — so we never set it from the account.)
   useEffect(() => {
     if (!account) return;
     if (account.default_template_id) setTemplateId(account.default_template_id);
-    if (account.next_cheque_no) setChequeNo(account.next_cheque_no);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId]);
 
@@ -111,10 +109,6 @@ export default function WriteCheque() {
       bearer: bearer ? 1 : 0,
       status: "issued",
     });
-    // If an account is attached, advance its running cheque number.
-    if (account && chequeNo) {
-      await setAccountNextCheque(account.id, incrementChequeNumber(chequeNo));
-    }
     await reloadPayees();
     return id;
   }
@@ -126,7 +120,8 @@ export default function WriteCheque() {
     setDateISO(todayISO());
     setCrossed(false);
     setBearer(false);
-    // chequeNo will refresh from the reloaded account
+    // Each physical cheque has its own pre-printed number, so clear it.
+    setChequeNo("");
   }
 
   async function onSave() {
@@ -277,7 +272,9 @@ export default function WriteCheque() {
                 className="mono"
                 value={chequeNo}
                 onChange={(e) => setChequeNo(e.target.value)}
+                placeholder="From the cheque"
               />
+              <div className="hint">As pre-printed on the cheque — for your records.</div>
             </div>
             <div className="field">
               <label>Memo / Purpose</label>

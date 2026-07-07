@@ -15,7 +15,6 @@ export interface Account {
   branch: string;
   currency: string;
   default_template_id: number | null;
-  next_cheque_no: string;
   created_at: string;
   // joined
   bank_short_name?: string;

@@ -52,7 +52,7 @@ export default function Accounts() {
         </div>
         <button
           className="btn primary"
-          onClick={() => setEditing({ account_name: "", currency: "PHP", next_cheque_no: "0000001" })}
+          onClick={() => setEditing({ account_name: "", currency: "PHP" })}
         >
           + New Account
         </button>
@@ -72,7 +72,6 @@ export default function Accounts() {
                 <th>Bank</th>
                 <th>Account No.</th>
                 <th>Branch</th>
-                <th>Next Cheque</th>
                 <th></th>
               </tr>
             </thead>
@@ -83,7 +82,6 @@ export default function Accounts() {
                   <td>{a.bank_short_name ?? "—"}</td>
                   <td className="mono muted">{a.account_number || "—"}</td>
                   <td className="muted">{a.branch || "—"}</td>
-                  <td className="mono">{a.next_cheque_no || "—"}</td>
                   <td className="text-right">
                     <button className="btn btn-sm" onClick={() => setEditing(a)}>
                       Edit
@@ -179,28 +177,16 @@ export default function Accounts() {
             </div>
           </div>
 
-          <div className="row">
-            <div className="field">
-              <label>Currency</label>
-              <select
-                value={editing.currency ?? "PHP"}
-                onChange={(e) => setEditing({ ...editing, currency: e.target.value })}
-              >
-                <option value="PHP">PHP — Philippine Peso</option>
-                <option value="USD">USD — US Dollar</option>
-                <option value="EUR">EUR — Euro</option>
-              </select>
-            </div>
-            <div className="field">
-              <label>Next Cheque No.</label>
-              <input
-                className="mono"
-                value={editing.next_cheque_no ?? ""}
-                onChange={(e) => setEditing({ ...editing, next_cheque_no: e.target.value })}
-                placeholder="0000001"
-              />
-              <div className="hint">Auto-increments after each cheque.</div>
-            </div>
+          <div className="field">
+            <label>Currency</label>
+            <select
+              value={editing.currency ?? "PHP"}
+              onChange={(e) => setEditing({ ...editing, currency: e.target.value })}
+            >
+              <option value="PHP">PHP — Philippine Peso</option>
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+            </select>
           </div>
 
           <div className="field">
