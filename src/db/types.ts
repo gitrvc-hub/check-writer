@@ -15,7 +15,6 @@ export interface Account {
   branch: string;
   currency: string;
   default_template_id: number | null;
-  next_cheque_no: string;
   created_at: string;
   // joined
   bank_short_name?: string;
@@ -52,6 +51,8 @@ export interface TemplateField {
   align: "left" | "center" | "right";
   letter_spacing: number; // extra tracking in pt (useful for boxed date digits)
   uppercase: boolean;
+  /** date-fns pattern for the `date` field only (e.g. "MMddyyyy" for boxed digits). */
+  format?: string;
 }
 
 export interface Template {

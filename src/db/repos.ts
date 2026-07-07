@@ -65,7 +65,7 @@ export async function upsertAccount(a: Partial<Account>): Promise<number> {
   if (a.id) {
     await db.execute(
       `UPDATE accounts SET bank_id=?, account_name=?, account_number=?, branch=?,
-         currency=?, default_template_id=?, next_cheque_no=? WHERE id=?`,
+         currency=?, default_template_id=? WHERE id=?`,
       [
         a.bank_id ?? null,
         a.account_name ?? "",
@@ -73,7 +73,6 @@ export async function upsertAccount(a: Partial<Account>): Promise<number> {
         a.branch ?? "",
         a.currency ?? "PHP",
         a.default_template_id ?? null,
-        a.next_cheque_no ?? "",
         a.id,
       ],
     );
@@ -81,8 +80,8 @@ export async function upsertAccount(a: Partial<Account>): Promise<number> {
   }
   const res = await db.execute(
     `INSERT INTO accounts (bank_id, account_name, account_number, branch, currency,
-        default_template_id, next_cheque_no)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        default_template_id)
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [
       a.bank_id ?? null,
       a.account_name ?? "",
@@ -90,7 +89,6 @@ export async function upsertAccount(a: Partial<Account>): Promise<number> {
       a.branch ?? "",
       a.currency ?? "PHP",
       a.default_template_id ?? null,
-      a.next_cheque_no ?? "",
     ],
   );
   return res.lastInsertId ?? 0;
@@ -99,20 +97,6 @@ export async function upsertAccount(a: Partial<Account>): Promise<number> {
 export async function deleteAccount(id: number): Promise<void> {
   const db = await getDb();
   await db.execute("DELETE FROM accounts WHERE id = ?", [id]);
-}
-
-/** Advance a "next cheque number" string, preserving any leading-zero width. */
-export function incrementChequeNumber(current: string): string {
-  const m = current.match(/^(\D*)(\d+)(\D*)$/);
-  if (!m) return current;
-  const [, prefix, digits, suffix] = m;
-  const next = (BigInt(digits) + 1n).toString().padStart(digits.length, "0");
-  return `${prefix}${next}${suffix}`;
-}
-
-export async function setAccountNextCheque(id: number, value: string): Promise<void> {
-  const db = await getDb();
-  await db.execute("UPDATE accounts SET next_cheque_no = ? WHERE id = ?", [value, id]);
 }
 
 // ----------------------------------------------------------------------------

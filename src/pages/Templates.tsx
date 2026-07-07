@@ -2,11 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useAsync } from "../hooks";
 import { deleteTemplate, listBanks, listTemplates, upsertTemplate } from "../db/repos";
 import type { Template } from "../db/types";
-import {
-  DEFAULT_CHEQUE_HEIGHT_MM,
-  DEFAULT_CHEQUE_WIDTH_MM,
-  defaultFields,
-} from "../lib/checkFields";
+import { DEFAULT_CHEQUE_HEIGHT_MM, DEFAULT_CHEQUE_WIDTH_MM } from "../lib/checkFields";
+import { LAYOUT_PRESETS, applyPreset } from "../lib/presets";
 import { formatDate } from "../lib/format";
 
 export default function Templates() {
@@ -15,11 +12,13 @@ export default function Templates() {
   const navigate = useNavigate();
 
   async function createNew() {
+    // Start new templates from the standard PH layout so the fields land in
+    // roughly the right places before the user attaches a scan.
     const id = await upsertTemplate({
       name: "New Template",
       width_mm: DEFAULT_CHEQUE_WIDTH_MM,
       height_mm: DEFAULT_CHEQUE_HEIGHT_MM,
-      fields: defaultFields(),
+      fields: applyPreset(LAYOUT_PRESETS[0], DEFAULT_CHEQUE_WIDTH_MM, DEFAULT_CHEQUE_HEIGHT_MM),
     });
     navigate(`/templates/${id}`);
   }

@@ -96,6 +96,28 @@ fn migrations() -> Vec<Migration> {
                 ('Robinsons Bank', 'RobinsonsBank', 1);
             "#,
         },
+        Migration {
+            version: 3,
+            description: "seed additional active Philippine banks",
+            kind: MigrationKind::Up,
+            sql: r#"
+            INSERT INTO banks (name, short_name, is_system) VALUES
+                ('Bank of Commerce', 'BankCom', 1),
+                ('Philippine Bank of Communications', 'PBCOM', 1),
+                ('Maybank Philippines', 'Maybank', 1),
+                ('CTBC Bank (Philippines)', 'CTBC', 1),
+                ('Philippine Business Bank', 'PBB', 1),
+                ('China Bank Savings', 'China Bank Savings', 1),
+                ('BPI Family Savings Bank', 'BPI Family', 1),
+                ('The Hongkong and Shanghai Banking Corporation', 'HSBC', 1),
+                ('Standard Chartered Bank', 'Standard Chartered', 1),
+                ('Philippine Veterans Bank', 'Veterans Bank', 1),
+                ('Philippine Trust Company', 'Philtrust', 1),
+                ('Sterling Bank of Asia', 'Sterling Bank', 1),
+                ('Equicom Savings Bank', 'Equicom', 1),
+                ('Bank of China (Manila)', 'Bank of China', 1);
+            "#,
+        },
     ]
 }
 
